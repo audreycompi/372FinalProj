@@ -45,7 +45,6 @@ durham_city_demo = get_acs(
   output="wide"
 )
 
-
 # Importing the service area and an NC blockgroups shapefile
 city_boundary = read_sf("Data/durham_city_boundaries.shp")
 block_groups = read_sf("Data/2022_blockgroups/tl_2022_37_bg.shp")
@@ -61,11 +60,12 @@ bg_demographics = st_transform(bg_demographics, 32119)
 # Run the spatial join
 durham_city_dems = st_intersection(city_boundary, bg_demographics)
 
-# Now I have all of my data so I'm going to start making my graphs.
+# Now I have all of my data in one table so I'm going to start making my graphs.
 # First, I need to delete all null values.
-
 races = filter(durham_city_dems, !is.na(whiteE), !is.na(blackE), !is.na(indigenousE), !is.na(asianE), !is.na(two_or_moreE))
 
+# I used groupby and summarize to select the attributes I specifically wanted for
+# this graph
 race = group_by(races, NAME) %>%
   summarize(
     whiteE=sum(whiteE),
@@ -75,15 +75,19 @@ race = group_by(races, NAME) %>%
     two_or_moreE=sum(two_or_moreE)
     )
 
+# I was getting a bit confused with making my dataframe for my graph so I looked
+# this up and it worked. It organized my table in the way I wanted so I could make 
+# my graph function
 race <- data.frame(
   Race=c("White","Black","Indigenous","Asian","Two or More") ,  
   Population=c(120215,90449,520,9549,7065)
 )
 
+# Then I made a bar chart based on my data frame
 ggplot(race, aes(x=Race, y=Population)) +
   geom_col()
 
-# I'm also going to look at commuter behavior 
+# I'm also going to look at commuter behavior, so I followed the same steps
 commuter_behave = filter(durham_city_dems, !is.na(vehicle_transitE), !is.na(public_transitE), 
                          !is.na(bike_transitE), !is.na(walk_transitE), !is.na(work_remoteE))
 
@@ -107,7 +111,9 @@ ggplot(commuters, aes(x=Mode, y=Population)) +
 
 # Understanding data prior to QGIS analysis
 
-# Now I want to import my Durham road network shapefile so I can identify the unique 
+# Before starting all of my work in QGIS, I wanted to better understand my data
+
+# I imported my Durham road network shapefile so I can identify the unique 
 # types to create a walkability methodology 
 durham_roadways = read_sf("Data/durham_city_roadways.shp")
 durham_sidewalks = read_sf("Data/durham_city_sidewalks.shp")
@@ -124,3 +130,5 @@ sum(is.na(durham_roadways$LANES))
 
 # There are zero null values for both! That makes defining and selecting walkable
 # streets much easier.
+
+# The rest of my network analysis was conducted in QGIS
